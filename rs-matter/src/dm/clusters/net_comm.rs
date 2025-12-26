@@ -848,12 +848,17 @@ where
         request: ScanNetworksRequest<'_>,
         response: ScanNetworksResponseBuilder<P>,
     ) -> Result<P, Error> {
+        info!(
+            "Inside handle scan networks. Net ctl type: {:?}",
+            self.net_ctl.net_type()
+        );
+
         match self.net_ctl.net_type() {
             NetworkType::Thread => {
                 let mut builder = Some(response);
                 let mut array_builder = None;
 
-                let (status, _, _) = NetworkCommissioningStatusEnum::map_ctl(
+                let scan_res = NetworkCommissioningStatusEnum::map_ctl(
                     self.net_ctl
                         .scan(
                             request
@@ -881,7 +886,11 @@ where
                         )
                         .await
                         .map(|_| 0),
-                )?;
+                );
+
+                info!("net_ctl.scan() => {:?}", scan_res);
+                let (status, _, _) = scan_res?;
+                info!("Commisioning status: {:?}", status);
 
                 if let Some(builder) = builder {
                     builder
@@ -890,7 +899,8 @@ where
                         .wi_fi_scan_results()?
                         .none()
                         .thread_scan_results()?
-                        .none()
+                        .some()? // present, but empty
+                        .end()? // end thread_scan_results array
                         .end()
                 } else {
                     unwrap!(array_builder.take()).end()?.end()

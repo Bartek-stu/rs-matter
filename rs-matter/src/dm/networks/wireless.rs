@@ -694,7 +694,7 @@ impl net_comm::NetCtl for NoopWirelessNetCtl {
     where
         F: FnOnce(&net_comm::NetworkScanInfo) -> Result<(), Error>,
     {
-        Err(NetCtlError::Other(ErrorCode::InvalidAction.into()))
+        Ok(())
     }
 
     async fn connect(&self, creds: &WirelessCreds<'_>) -> Result<(), NetCtlError> {
